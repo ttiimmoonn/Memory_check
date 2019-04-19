@@ -61,7 +61,7 @@ def check_resul(initial_result, final_result):
 		result_result = {}
 		for a in initial_result.keys():
 			result_result[a] = final_result[a] - initial_result[a]
-		logger.info("{}--| [ {} ] rss {}  uss {} pss {}".format(result_result["time"], "result",  result_result["rss"], result_result["uss"], result_result["pss"]))
+		logger.info("{}--| [ {} ] rss {}  uss {} pss {} cpu {}".format(result_result["time"], "result",  result_result["rss"], result_result["uss"], result_result["pss"], result_result["cpu"]))
 		return(result_result)
 	except Exception as ex:
 		logger.error("Error check result...")
@@ -84,16 +84,17 @@ def signal_handler(current_signal, frame):
 		sys.exit(1)
 
 #чекаем память
-def memr_stat(pid_pr, csv_path, start_time):
+def memr_stat(pid_pr, csv_path, start_time, timeout):
 	try:
 		time_now = datetime.strftime(datetime.now(), "%H_%M_%S")
 		pr = psutil.Process(int(pid_pr)) 
 		a = pr.memory_full_info()
+		cpu = int(psutil.cpu_percent(int(timeout)-1))
 
-		logger.info("{}--| [ {} ] rss {} vms {} shared {} text {} data {} uss {} pss {}".format(time_now, pr.name(), a[0], a[1], a[2], a[3], a[5], a[7], a[8]))
+		logger.info("{}--| [ {} ] rss {} vms {} shared {} text {} data {} uss {} pss {} cpu(%) {}".format(time_now, pr.name(), a[0], a[1], a[2], a[3], a[5], a[7], a[8], cpu))
 		with open("{}/check_mem_{}_csv.csv".format(csv_path, start_time), "a+") as csv:
-			csv.write("{};{};{};{};{};{};{};{};\n".format(time_now, a[0], a[1], a[2], a[3], a[5], a[7], a[8]))
-		return({"time": datetime.now(), "rss": a[0], "uss": a[7],"pss": a[8]})
+			csv.write("{};{};{};{};{};{};{};{};\n".format(time_now, a[0], a[1], a[2], a[3], a[5], a[7], a[8], cpu))
+		return({"time": datetime.now(), "rss": a[0], "uss": a[7],"pss": a[8], "cpu": cpu})
 	except Exception as ex:
 		logger.error("Error reading parameters..")
 		logger.debug("%s", ex)
@@ -118,7 +119,7 @@ try:
 	logger = create_logger(log_path)
 	#пилим  csv файл
 	csv = open("{}/check_mem_{}_csv.csv".format(csv_path, start_time), "w+")
-	csv.write("pidPR\ntime;rss;vms;shared;text;data;uss;pss;\n")
+	csv.write("pidPR\ntime;rss;vms;shared;text;data;uss;pss;cpu;\n")
 	csv.close()
 
 	#парсим аргументы
@@ -153,10 +154,10 @@ try:
 		sys.exit(1)
 
 	#определили первый result
-	initial_result = memr_stat(pid_pr, csv_path, start_time)
+	initial_result = memr_stat(pid_pr, csv_path, start_time, timeout)
 
 	while True:
-		final_result = memr_stat(pid_pr, csv_path, start_time)	
+		final_result = memr_stat(pid_pr, csv_path, start_time, timeout)	
 		time.sleep(timeout)
 
 except Exception as ex:
