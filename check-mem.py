@@ -93,7 +93,7 @@ def memr_stat(pid_pr, csv_path, start_time, timeout):
 
 		logger.info("{}--| [ {} ] rss {} vms {} shared {} text {} data {} uss {} pss {} cpu(%) {}".format(time_now, pr.name(), a[0], a[1], a[2], a[3], a[5], a[7], a[8], cpu))
 		with open("{}/check_mem_{}_csv.csv".format(csv_path, start_time), "a+") as csv:
-			csv.write("{};{};{};{};{};{};{};{};\n".format(time_now, a[0], a[1], a[2], a[3], a[5], a[7], a[8], cpu))
+			csv.write("{};{};{};{};{};{};{};{};{};\n".format(time_now, a[0], a[1], a[2], a[3], a[5], a[7], a[8], cpu))
 		return({"time": datetime.now(), "rss": a[0], "uss": a[7],"pss": a[8], "cpu": cpu})
 	except Exception as ex:
 		logger.error("Error reading parameters..")
